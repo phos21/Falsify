@@ -1,0 +1,48 @@
+当時の目標: driver.py の動作をmatlabで実装する
+
+変更点
+
+
+carsRLFull
+1. 出力を　１ステップ遅らせて1/z　入れるように変更
+2. RL agentブロックを　Reinforcement Learning toolboxのRL Agentボックスに変更
+
+
+S-TaLiRo
+1. https://users.fit.cvut.cz/~apelttom/s_taliro.html
+の指示に従い、ダウンロード、pathの問題があるそうだが、そのまま使用
+2. metascript.m は実行できず、algoFullmdls = {{'RL', 'DDQN', 'carsRLFull'}};のみを実行に成功、A3Cアルゴリズムは実行できなかった
+
+make_ddqn_agentを作成した
+: これにおける実行は、まだできていない。
+
+現状
+metascript_cars.mを実行できる
+metascript_cars.m　algoFullmdls = {{'RL', 'DDPG', 'carsRLFull'}};　を新しく追加
+ddpg_agent作成:　これでagentを生成し、学習・シミュレーションの実行ができることを確認した。
+falsify.m　の中身変更、コメント化されたものは既存のコード、falsify_pastが原本のバックアップ
+入出力の範囲など全ての設定が厳密でない。学習を実行すると縦軸120より上には上がれない謎現象
+falsify.mの
+    agent = ddpg_agent;
+    [xout, yout] = agent.create_train();
+    [Y, T] = yout2TY(yout);
+
+上記の３行が書けたことが１０日間の成果
+
+
+
+今後の課題
+次を使用中のエラー: mx_dp_taliro
+mx_dp_taliro: Above predicate: The dimensions of the set constraints and the state trace do not match!
+
+エラー: dp_taliro (行 233)
+    [tmp_rob,aux] = dp_taliro_casting(mx_dp_taliro(phi,Pred,seqS,seqT));
+
+エラー: falsify (行 103)
+    rob = dp_taliro(config.targetFormula, normal_preds, Y, T, [], [], []);
+
+急いで、simOutより、action である200x1配列の xout, stateである 4列の配列であるyoutを抽出、
+youtをdp_taliroに入れようとしたが、エラー
+
+
+２週間、ありがとうございました。

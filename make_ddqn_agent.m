@@ -1,0 +1,61 @@
+function agent = make_ddqn_agent(obs_space_dim, action_space_dim)
+    % 観測空間と行動空間の定義
+    gamma = 0.99;%discount factor
+    obs_low = -ones(1, obs_space_dim);
+    obs_high = ones(1, obs_space_dim);
+    ac_low = -ones(1, action_space_dim);
+    ac_high = ones(1, action_space_dim);
+    % ObservationInfo
+    obsInfo = rlNumericSpec([obs_space_dim 1]);%[4 1]
+    obsInfo.Name = 'observations';
+    obsInfo.LowerLimit = obs_low';
+    obsInfo.UpperLimit = obs_high';
+    % ActionInfo
+    actInfo = rlFiniteSetSpec([-1 1]);
+    actInfo.Name = 'actions';
+    
+    % Q関数のネットワーク構造を定義
+    net = [
+        featureInputLayer(obs_space_dim)
+        fullyConnectedLayer(50)
+        reluLayer
+        fullyConnectedLayer(50)
+        reluLayer
+        fullyConnectedLayer(action_space_dim)
+    ];
+    net = dlnetwork(net);
+    summary(net)
+    plot(net)
+    % net = initialize(net);
+    % summary(net)
+    critic = rlVectorQValueFunction(net,obsInfo,actInfo);% Q関数
+    % targetNet = rlVectorQValueFunction(net, obsInfo, actInfo);
+    % エージェントオプションの設定
+    agentOpts = rlDQNAgentOptions;
+    agentOpts.SampleTime = 1;   
+    agentOpts.DiscountFactor = gamma;
+    agentOpts.MiniBatchSize = 256;%32
+    agentOpts.ExperienceBufferLength = 1e6;
+    agentOpts.TargetUpdateFrequency = 100;
+    agentOpts.TargetSmoothFactor = 1e-3;%pythonでは100に設定されていた?
+    % ε-greedy 探索
+    agentOpts.EpsilonGreedyExploration.Epsilon = 1;
+    agentOpts.EpsilonGreedyExploration.EpsilonMin = 0.01;
+    agentOpts.EpsilonGreedyExploration.EpsilonDecay = 0.005;
+    
+    agentOpts.CriticOptimizerOptions.LearnRate = 1e-3;%学習率確認が必要
+    agentOpts.CriticOptimizerOptions.GradientThreshold = 40;
+    % agentOpts.LearningFrequency = 4;
+    agentOpts.UseDoubleDQN = true;
+
+    % trainOpts = rlTrainingOptions(...
+    % MaxEpisodes=1000, ...
+    % MaxStepsPerEpisode=500, ...
+    % Verbose=false, ...
+    % Plots="training-progress",...
+    % StopTrainingCriteria="AverageReward",...
+    % StopTrainingValue=480); 
+
+    agent = rlDQNAgent(critic, agentOpts);
+    % policy = rlMaxQPolicy(critic);
+end
